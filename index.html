@@ -189,57 +189,6 @@
   /* ---------- FOOTER ---------- */
   .footer{text-align:center;margin-top:34px;font-size:11.5px;color:#54586b;font-weight:600;line-height:1.8}
 
-  /* ---------- DURATION CARD ---------- */
-  .duration-card{
-    position:relative;
-    margin:20px auto 0;
-    max-width:480px;
-    display:flex;align-items:center;gap:14px;
-    padding:14px 20px;
-    border-radius:20px;
-    background:linear-gradient(135deg, rgba(123,92,255,.14), rgba(33,212,253,.07));
-    border:1px solid rgba(255,255,255,.10);
-    box-shadow:0 24px 60px -30px rgba(123,92,255,.6), inset 0 1px 0 rgba(255,255,255,.07);
-    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-    overflow:hidden;
-  }
-  .duration-card::before{
-    content:'';position:absolute;inset:0;pointer-events:none;
-    background:radial-gradient(420px 140px at 0% 50%, rgba(123,92,255,.22), transparent 70%);
-  }
-  .duration-card::after{
-    content:'';position:absolute;top:0;bottom:0;left:-40%;width:35%;
-    background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);
-    transform:skewX(-18deg);
-    animation:durShine 6s ease-in-out infinite;
-    pointer-events:none;
-  }
-  @keyframes durShine{0%{left:-40%}55%,100%{left:130%}}
-
-  .duration-icon{
-    width:44px;height:44px;flex-shrink:0;border-radius:14px;
-    display:grid;place-items:center;color:#fff;
-    background:linear-gradient(135deg,#7b5cff,#21d4fd);
-    box-shadow:0 10px 24px -8px rgba(123,92,255,.9), inset 0 1px 0 rgba(255,255,255,.3);
-    position:relative;z-index:1;
-  }
-  .duration-icon svg{width:22px;height:22px}
-  .duration-text{position:relative;z-index:1;min-width:0;flex:1}
-  .duration-label{
-    font-size:10px;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--muted);font-weight:800;margin-bottom:4px;
-  }
-  .duration-value{
-    font-size:14.5px;font-weight:600;color:#dfe2ee;line-height:1.35;
-    letter-spacing:-.005em;
-  }
-  .duration-value b{
-    font-weight:800;
-    background:linear-gradient(100deg,#cbbcff 0%,#21d4fd 100%);
-    -webkit-background-clip:text;background-clip:text;
-    color:transparent;
-  }
-
   /* ---------- FX ---------- */
   #fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:999;display:none}
 
@@ -365,7 +314,7 @@
     background:rgba(0,0,0,.28);
     flex-shrink:0;
   }
-  .chat-input-area input[type="text"]{
+  .chat-input-area input{
     flex:1;min-width:0;
     padding:12px 16px;
     border-radius:14px;
@@ -374,8 +323,8 @@
     color:var(--text);font-family:inherit;font-size:14px;font-weight:600;
     outline:none;transition:border-color .2s, box-shadow .2s;
   }
-  .chat-input-area input[type="text"]::placeholder{color:rgba(255,255,255,.28);font-weight:500}
-  .chat-input-area input[type="text"]:focus{
+  .chat-input-area input::placeholder{color:rgba(255,255,255,.28);font-weight:500}
+  .chat-input-area input:focus{
     border-color:rgba(123,92,255,.65);
     box-shadow:0 0 0 3px rgba(123,92,255,.16);
   }
@@ -419,9 +368,6 @@
     .meta{gap:10px}
     .chat-btn span{display:none}
     .chat-btn{padding:10px}
-    .duration-card{padding:13px 16px;gap:12px}
-    .duration-value{font-size:13.5px}
-    .duration-icon{width:40px;height:40px;border-radius:12px}
   }
 </style>
 </head>
@@ -505,20 +451,6 @@
 
   <div class="footer">Сделано с любовью к железу</div>
 
-  <!-- DURATION CARD -->
-  <div class="duration-card">
-    <div class="duration-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="9"/>
-        <path d="M12 7v5l3 2"/>
-      </svg>
-    </div>
-    <div class="duration-text">
-      <div class="duration-label">Длительность сбора</div>
-      <div class="duration-value">Сбор идёт уже <b id="durationText">…</b></div>
-    </div>
-  </div>
-
 </main>
 
 <!-- ============================================================
@@ -562,7 +494,7 @@
 </div>
 
 <!-- ============================================================
-     ОСНОВНОЙ СКРИПТ (прогресс сбора + длительность)
+     ОСНОВНОЙ СКРИПТ (прогресс сбора)
      ============================================================ -->
 <script>
 (function(){
@@ -574,22 +506,8 @@
      ╚══════════════════════════════════════════════════════════╝ */
 
   const CONFIG = {
-    COLLECTED: 24000,
-    GOAL:      70000,
-
-    /* ╔══════════════════════════════════════════════════════╗
-       ║  ⚙️  ДАТА НАЧАЛА СБОРА  ⚙️                          ║
-       ║                                                      ║
-       ║  null  →  автоматически берётся «5 дней назад»      ║
-       ║           при ПЕРВОМ открытии сайта, дата           ║
-       ║           запоминается в браузере и дальше          ║
-       ║           отсчёт идёт сам.                           ║
-       ║                                                      ║
-       ║  Или задайте вручную, например:                      ║
-       ║     START_DATE: new Date(2026, 0, 1)                 ║
-       ║     (1 января 2026, месяц с нуля)                    ║
-       ╚══════════════════════════════════════════════════════╝ */
-    START_DATE: null
+    COLLECTED: 0,
+    GOAL:      70000
   };
 
   const nf = new Intl.NumberFormat('ru-RU');
@@ -639,108 +557,6 @@
   }
   elCard.classList.toggle('done', done);
 
-  /* ============================================================
-     ДЛИТЕЛЬНОСТЬ СБОРА
-     ============================================================ */
-
-  const START_KEY = 'pepe-fund-start-date';
-
-  function autoStartDate(){
-    // 5 дней назад, начало дня — чтобы «5 дней» было стабильным весь день
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() - 5);
-    return d;
-  }
-
-  function resolveStartDate(){
-    // 1) ручная дата из конфига
-    if(CONFIG.START_DATE instanceof Date && !isNaN(CONFIG.START_DATE.getTime())){
-      return CONFIG.START_DATE;
-    }
-    // 2) уже сохранённая дата в браузере
-    try {
-      const stored = localStorage.getItem(START_KEY);
-      if(stored){
-        const d = new Date(stored);
-        if(!isNaN(d.getTime())) return d;
-      }
-    } catch(e){}
-
-    // 3) первый запуск — фиксируем «5 дней назад» и сохраняем
-    const d = autoStartDate();
-    try { localStorage.setItem(START_KEY, d.toISOString()); } catch(e){}
-    return d;
-  }
-
-  const START_DATE = resolveStartDate();
-
-  function plural(n, forms){
-    const a = Math.abs(n) % 100;
-    const b = a % 10;
-    if(a > 10 && a < 20) return forms[2];
-    if(b > 1 && b < 5) return forms[1];
-    if(b === 1) return forms[0];
-    return forms[2];
-  }
-
-  // календарная разница в месяцах + остаток в днях
-  function diffMonthsDays(start, now){
-    let months = (now.getFullYear() - start.getFullYear()) * 12
-               + (now.getMonth() - start.getMonth());
-
-    let anchor = new Date(start.getTime());
-    anchor.setMonth(anchor.getMonth() + months);
-
-    if(anchor > now){
-      months--;
-      anchor = new Date(start.getTime());
-      anchor.setMonth(anchor.getMonth() + months);
-    }
-
-    const anchorMid = new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate());
-    const nowMid    = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    let days = Math.round((nowMid - anchorMid) / 86400000);
-
-    if(days < 0) days = 0;
-
-    return { months: Math.max(0, months), days: days };
-  }
-
-  function formatDuration(start, now){
-    if(now < start) return 'ещё не начался';
-
-    const { months, days } = diffMonthsDays(start, now);
-
-    if(months === 0 && days === 0) return 'меньше дня';
-
-    const parts = [];
-
-    if(months > 0){
-      parts.push(months + ' ' + plural(months, ['месяц','месяца','месяцев']));
-    }
-    if(days > 0){
-      parts.push(days + ' ' + plural(days, ['день','дня','дней']));
-    }
-
-    return parts.join(' и ');
-  }
-
-  const elDuration = $('durationText');
-
-  function updateDuration(){
-    if(!elDuration) return;
-    const text = formatDuration(START_DATE, new Date());
-    elDuration.textContent = text + '.';
-  }
-
-  updateDuration();
-  // Пересчёт раз в минуту — переход через полночь подхватится сразу.
-  setInterval(updateDuration, 60000);
-
-  /* ============================================================
-     КОНФЕТТИ ПРИ ДОСТИЖЕНИИ ЦЕЛИ
-     ============================================================ */
   if(done) setTimeout(burstConfetti, 700);
 
   function burstConfetti(){
@@ -792,12 +608,12 @@
 </script>
 
 <!-- ============================================================
-     FIREBASE CHAT (только текст)
+     FIREBASE CHAT
      ============================================================ -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
-    getDatabase, ref as dbRef, push, onValue, query, limitToLast, serverTimestamp
+    getDatabase, ref, push, onValue, query, limitToLast, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
   const firebaseConfig = {
@@ -826,18 +642,23 @@
       timeZone: MSK, year: 'numeric', month: '2-digit', day: '2-digit'
     }).format(date);
   }
+
   function formatTimeMsk(date){
     return new Intl.DateTimeFormat('ru-RU', {
       timeZone: MSK, hour: '2-digit', minute: '2-digit'
     }).format(date);
   }
+
   function formatDateLabel(date){
     const key = getMskKey(date);
     const nowKey = getMskKey(new Date());
+
     if(key === nowKey) return 'Сегодня';
+
     const yest = new Date();
     yest.setDate(yest.getDate() - 1);
     if(key === getMskKey(yest)) return 'Вчера';
+
     return new Intl.DateTimeFormat('ru-RU', {
       timeZone: MSK, day: 'numeric', month: 'long'
     }).format(date);
@@ -870,6 +691,7 @@
   }
 
   /* ---------- Открытие / закрытие ---------- */
+  let hasUnread = false;
   let chatOpen = false;
 
   function openChat(){
@@ -877,11 +699,13 @@
     chatOverlay.classList.add('open');
     document.body.style.overflow = 'hidden';
     chatBtn.classList.remove('has-new');
+    hasUnread = false;
     setTimeout(() => {
       chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
       try { chatInput.focus({ preventScroll: true }); } catch(e){}
     }, 380);
   }
+
   function closeChat(){
     chatOpen = false;
     chatOverlay.classList.remove('open');
@@ -898,12 +722,13 @@
   });
 
   /* ---------- Firebase ---------- */
-  let messagesRef = null;
+  let messagesPath = null;
+  let db = null;
 
   try {
     const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    messagesRef = dbRef(db, 'chat/messages');
+    db = getDatabase(app);
+    messagesPath = ref(db, 'chat/messages');
   } catch(e){
     console.error('Firebase init error:', e);
     showError('Не удалось подключиться к чату');
@@ -971,6 +796,7 @@
 
     if(!chatOpen && !firstRender && messages.length){
       chatBtn.classList.add('has-new');
+      hasUnread = true;
     }
 
     firstRender = false;
@@ -984,8 +810,8 @@
   }
 
   /* ---------- Подписка ---------- */
-  if(messagesRef){
-    const q = query(messagesRef, limitToLast(10));
+  if(messagesPath){
+    const q = query(messagesPath, limitToLast(10));
 
     onValue(q, (snapshot) => {
       const data = snapshot.val() || {};
@@ -1016,14 +842,14 @@
 
   async function sendMessage(){
     const text = chatInput.value.trim();
-    if(!text || sending || !messagesRef) return;
+    if(!text || sending || !messagesPath) return;
 
     sending = true;
     chatInput.value = '';
     updateSendState();
 
     try {
-      await push(messagesRef, {
+      await push(messagesPath, {
         text: text.slice(0, 500),
         ts: serverTimestamp()
       });
